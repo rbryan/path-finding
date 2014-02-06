@@ -22,7 +22,361 @@
 
 
 int main(int argc, char **argv){
+	img_t *img;
+	img = ld_img_img(argv[1]);
+	set_vals(img);
+	find_path(img);
+	mk_img_img(img,argv[2]);
 	return 0;
+}
+
+void find_path(img_t *img){
+	int sx,sy;
+	int ex,ey;
+	node *current;
+	node *fringe;
+	int **mat;
+	img_t *cp;
+	int notdone;
+
+	cp_img(&cp,img);
+
+	sx = img->sx;
+	sy = img->sy;
+	ex = img->ex;
+	ey = img->ey;
+
+	mat = img->matrix;
+
+	fringe = NULL;
+
+	mat[sx][sy] = TAGGED;
+
+	notdone=1;
+
+	while(notdone){
+		free_fringe(fringe);
+		fringe = get_fringe(img);
+		current = fringe;
+		do{
+			if(current->x==ex && current->y ==ey){
+				backtrack(img,cp);
+				notdone=0;
+				break;	
+			}else{
+				set_surroundings(img,current->x,current->y);
+				current = current->next;
+			}
+		}while(current->next != NULL);
+		mk_img_img(img,"test.png");
+
+	}
+
+
+
+}
+
+void backtrack(img_t *img,img_t *orig){
+	int x,y;
+	int bt;
+	x = img->ex;
+	y = img->ey;
+
+	while(x != img->sx || y != img->sy){
+		printf("%d %d\n",x,y);
+		bt = get_backtrack(orig,img,x,y);
+		switch(bt){
+			case 1:
+				x -= 1;
+				y -= 1;
+				break;
+			case 2:
+				y -= 1;
+				break;
+			case 3:
+				x+=1;
+				y-=1;
+				break;
+			case 4:
+				x-=1;
+				break;
+			case 5:
+				x+=1;
+				break;
+			case 6:
+				x-=1;
+				y+=1;
+				break;
+			case 7:
+				y+=1;
+				break;
+			case 8:
+				x+=1;
+				y+=1;
+				break;
+			default:
+				fprintf(stderr,"What kind of direction is that?: %d\n",bt);
+return;
+		}
+		x = wrap(x,img->width);
+		y = wrap(y,img->height);
+		img->matrix[x][y] = PATH;	
+	}
+}
+int get_backtrack(img_t *orig,img_t *img, int x, int y){
+	int i,j;
+	int w,h;
+
+	w = img->width;
+	h = img->height;
+
+	x = wrap(x,img->width);
+	y = wrap(y,img->height);
+
+	i = wrap(x-1,w);
+	j = wrap(y-1,h);
+	
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 1;
+	}
+
+	i = wrap(x,w);
+	j = wrap(y-1,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 2;
+	}
+	
+	i = wrap(x+1,w);
+	j = wrap(y-1,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 3;
+	}
+	
+	i = wrap(x-1,w);
+	j = wrap(y,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 4;
+	}
+	
+	i = wrap(x+1,w);
+	j = wrap(y,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 5;
+	}
+	
+	i = wrap(x-1,w);
+	j = wrap(y+1,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 6;
+	}
+	
+	i = wrap(x,w);
+	j = wrap(y+1,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 7;
+	}
+	
+	i = wrap(x+1,w);
+	j = wrap(y+1,h);
+	if((img->vals[i][j] - img->vals[x][y]) < 3){
+		return 8;
+	}
+	return 0;
+}
+
+
+void free_fringe(node *head){
+	node *next;
+	node *current;
+	current = head;
+	if(current==NULL){
+		return;
+	}
+	while(current->next != NULL){
+		next = current->next;
+		free(current);
+		current = next;
+	}
+	free(current);
+
+}
+
+node *get_fringe(img_t *img){
+	int i,j;
+	int w,h;
+	node *new;
+	node *current;
+
+	w = img->width;
+	h = img->height;
+
+	new = newnode(0,0,0);
+	current = new;
+
+	for(i=0; i<w; i++){
+		for(j=0; j<h; j++){
+			if(on_edge(img,i,j)){
+				current->next = newnode(i,j,img->vals[i][j]);
+				current->next->prev = current;
+				current = current->next;
+			}
+		}
+	}
+
+	return new->next;
+
+	
+}
+
+int on_edge(img_t *img,int x, int y){
+	int i,j;
+
+	x -= 1;
+	y -= 1;
+
+	for(i=0; i < 3; i++){
+		for(j=0; j<3; j++){
+			if(i==1 && j==1){
+				continue;
+			}
+			if(get_val(img,x+i,y+j)!=TAGGED){
+				return 1;
+			}
+			
+		}
+	}
+	return 0;
+	
+}
+
+void set_vals(img_t *img){
+	int i,j;
+	int val;
+
+	for(i=0; i < img->width; i++){
+		for(j=0; j<img->height; j++){
+			val = img->matrix[i][j];
+			switch(val){
+				case NORM:
+					img->vals[i][j] = 1;
+					break;
+				case START:
+					img->vals[i][j] = 0;
+					break;
+				case END:
+					img->vals[i][j] = 1;
+					break;
+				case WATER:
+					img->vals[i][j] = 2;
+					break;
+				case WALL:
+					img->vals[i][j] = 10000;
+					break;
+				default:
+					fprintf(stderr,"Unknown type at %d %d.\n",i,j);
+					return;
+		
+			}	
+		}
+	}
+}
+
+void set_surroundings(img_t *img, int x, int y){
+	int i,j;
+
+	x -= 1;
+	y -= 1;
+
+	for(i=0; i < 3; i++){
+		for(j=0; j<3; j++){
+			if(i==1 && j==1){
+				continue;
+			}else if(get_val(img,x+i,y+j)==TAGGED){
+				continue;
+			}
+			set_val(img,TAGGED,x+i,y+j);
+			set_dist(img,x+1,y+1,x+i,y+j);
+		}
+	}
+	
+}
+
+void set_dist(img_t *img,int sx, int sy, int ex, int ey){
+	sx = wrap(sx,img->width);
+	sy = wrap(sy,img->height);
+	ex = wrap(ex,img->width);
+	ey = wrap(ey,img->height);
+	
+	img->vals[ex][ey]=img->vals[ex][ey]+img->vals[sx][sy];
+	
+}
+
+
+int count_near(img_t *img, int x,int y){
+	int i,j;
+	int count;
+
+	x -= 1;
+	y -= 1;
+
+	count = 0;
+
+	for(i=0; i < 3; i++){
+		for(j=0; j<3; j++){
+			if(i==1 && j==1){
+				continue;
+			}
+			if(get_val(img,i+x,j+y)==TAGGED){
+				count++;
+			}	
+		}
+	}
+
+	return count;
+}
+
+node *newnode(int x, int y,float val){
+	node *new;
+	new = calloc(1,sizeof(node));
+	new->x = x;
+	new->y = y;
+	new->val = val;
+	return new;
+}
+
+void app_node(node *head,node *new){
+	node *current;
+	current = head;
+	if(head==NULL){
+		fprintf(stderr,"Tried to append to a null head\n");
+		return;
+	}
+	while(current->next != NULL){
+
+		current = current->next;
+	}
+	current->next = new;
+	new->prev = current;
+}
+
+node *lowest(node *head){
+	node *current;
+	node *lowest;
+
+	lowest = head;
+	current = head;
+	if(head==NULL){
+		fprintf(stderr,"Tried to append to a null head\n");
+		return NULL;
+	}
+	while(current->next != NULL){
+
+		current = current->next;
+		if(current->val < lowest->val){
+			lowest = current;
+		}
+	}
+	return lowest;
 }
 
 void set_stack_size(int mb){
@@ -65,6 +419,12 @@ void cp_img(img_t **dest, img_t *src){
 	for(i=0; i < w; i++){
 		for(j=0; j < h; j++){
 			(*dest)->matrix[i][j] = src->matrix[i][j];
+		}
+	}
+
+	for(i=0; i<w; i++){
+		for(j=0; j<h; j++){
+			(*dest)->vals[i][j] = src->vals[i][j];
 		}
 	}
 
@@ -280,6 +640,11 @@ img_t *new_img(int w, int h){
 	}
 	newimg->width = w;
 	newimg->height = h;
+	newimg->vals = calloc(w,sizeof(float*));
+	for(i=0; i<w; i++){
+		newimg->vals[i] = calloc(h,sizeof(float));
+	}
+
 	return newimg;
 
 }

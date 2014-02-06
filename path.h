@@ -5,16 +5,19 @@ struct img_t{
 	int **matrix;
 	int sx,sy;
 	int ex,ey;
+	float **vals;
 };
 typedef struct img_t img_t;
 
-struct tdata{
-	img_t *real;
-	img_t *trimmed;
-	int *cx,*cy;
-	pthread_mutex_t *lock;
+struct node{
+	int x,y;
+	float val;
+	struct node *prev;
+	struct node *next;
 };
-typedef struct tdata tdata;
+typedef struct node node;
+
+
 
 img_t *new_img(int w,int h);
 
@@ -26,23 +29,20 @@ void free_img(img_t *img);
 img_t *ld_img_img(const char *name);
 void mk_img_img(img_t *img, const char *name);
 inline int wrap(register int x, register int side);
-int chk_pt(img_t *img, int x, int y);
-void gen_maze(img_t *img,int x, int y, int *count);
 void set_stack_size(int mb);
-void mv_dir(img_t * img,int *x, int *y, int dir);
-int look_dir(img_t *img, int x, int y, int dir);
-int is_dir(int p,int d);
-int pop_dir(int *paths);
-int count_dir(int paths);
-void print_dir(int paths);
-void * solv_maze(void *data);
 void cp_img(img_t **dest, img_t *src);
-int get_dirs(img_t *img, int x, int y);
-void toggle_seen(img_t *img,int x, int y);
-int turn_180(int dir);
-int turn_right(int dir);
-int turn_left(int dir);
-void * lhsolve(void *data);
-int seen(img_t *img,int x,int y);
-inline void fill(int **mat,int x, int y, int dir);
-void * trim(void *data);
+int count_near(img_t *img, int x,int y);
+void find_path(img_t *img);
+void backtrack(img_t *img,img_t *orig);
+int get_backtrack(img_t *orig,img_t *img, int x, int y);
+void free_fringe(node *head);
+node *get_fringe(img_t *img);
+int on_edge(img_t *img,int x, int y);
+void set_vals(img_t *img);
+void set_surroundings(img_t *img, int x, int y);
+void set_dist(img_t *img,int sx, int sy, int ex, int ey);
+int count_near(img_t *img, int x,int y);
+node *newnode(int x, int y,float val);
+void app_node(node *head,node *new);
+node *lowest(node *head);
+float get_cost(int type);
