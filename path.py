@@ -166,6 +166,7 @@ def on_edge(x,y):
     for i in range(3):
         for j in range(3):
             a,b=wrap(i+x-1,j+y-1)
+	    if a > w or b > h: print (a,b),(w,h);
             if(marked[a][b]==True and found_marked==False):
                 found_marked=True;
             if(found_marked==True and marked[a][b]==False):
@@ -175,20 +176,9 @@ def on_edge(x,y):
 def wrap(x,y):
     global w;
     global h;
-
-    if(x%w==0):
-        x = 0;
-    if(x < 0):
-        x = w+(x%w);
-    else:
-        x = x%w;
-
-    if(y%w==0):
-        y = 0;
-    if(y < 0):
-        y = h+(y%h);
-    else:
-        y = y%h;
+	
+    x = x%w;
+    y = y%h;
     return x,y
 
 def init_costs():
