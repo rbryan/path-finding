@@ -58,11 +58,9 @@ def find_path(s,e):
     while cont:
         fringe = [];
         fringe = get_fringe();
-        for i in fringe:
-            if(process_fringe_element(i)==False):
-                cont = False;  
-                break;
-        print len(fringe);
+	cont = process_fringe_element(fringe[0]);
+	print len(fringe);
+	#show_marked();
     traceback();
 
 def traceback():
@@ -95,12 +93,13 @@ def find_next_trace(x,y):
             cost1 = costs[x][y];
             cost2 = costs[a][b];
             diff=cost2-cost1;
-            print start,end,(x,y),(a,b),cost1,cost2,diff;
+	    comp = diff-cost((x,y),(a,b));
+	    price = cost((x,y),(a,b));
+            print start,end,(x,y),(a,b),cost1,cost2,diff,comp;
             if((a,b)==start):
                 pix[x,y] = green;
                 return (a,b);
-	    comp = diff-cost((x,y),(a,b));
-            if(comp < 0.001 and comp > 0):
+            if(comp < 0.001 and comp > -0.001):
                 pix[x,y] = green;
                 return (a,b);
     
@@ -241,13 +240,10 @@ def cost(s,e):
     sx,sy = s;
     ex,ey = e;
 
-    print costs[ex][ey];
 
     d = pow((ex-sx)**2+(ey-sy)**2,0.5)
-    
     h = abs(pix[ex,ey][1]-pix[sx,sy][1]);
 
-    print d+20*h;
     return (d+20*h+costs[ex][ey]);
 
 def find_s_e():
