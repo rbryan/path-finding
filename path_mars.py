@@ -50,8 +50,8 @@ def find_path(s,e):
     global pix;
     global img;
 
-    sx,sy = start;
-    ex,ey = end;
+    sx,sy = s;
+    ex,ey = e;
 
     marked[sx][sy] = True;
     cont=True;
@@ -165,15 +165,19 @@ def on_edge(x,y):
     if(marked[x][y]==False):
         return False;
     
-    found_marked=False;
+    marked_count = 1
+    unmarked_count = 0;
     for i in range(3):
         for j in range(3):
             a,b=wrap(i+x-1,j+y-1)
-	    if a > w or b > h: print (a,b),(w,h);
-            if(marked[a][b]==True and found_marked==False):
-                found_marked=True;
-            if(found_marked==True and marked[a][b]==False):
-                return True;
+    	    if(marked[a][b]==True):
+		    marked_count += 1;
+	    elif(marked[a][b]==False):
+		    unmarked_count += 1;
+	    else:
+		    print "Strange markings on the wall..";
+    if(marked_count > 0 and unmarked_count > 0):
+	    return True;
     return False;
 
 def wrap(x,y):
@@ -237,10 +241,13 @@ def cost(s,e):
     sx,sy = s;
     ex,ey = e;
 
+    print costs[ex][ey];
+
     d = pow((ex-sx)**2+(ey-sy)**2,0.5)
     
     h = abs(pix[ex,ey][1]-pix[sx,sy][1]);
 
+    print d+20*h;
     return (d+20*h+costs[ex][ey]);
 
 def find_s_e():
