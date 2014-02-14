@@ -1,0 +1,33 @@
+#include <pthread.h>
+
+struct img_t{
+	int width, height;
+	int **matrix;
+	int sx,sy;
+	int ex,ey;
+	float **vals;
+};
+typedef struct img_t img_t;
+
+struct node{
+	int x,y;
+	float val;
+	struct node *prev;
+	struct node *next;
+};
+typedef struct node node;
+
+
+
+img_t *new_img(int w,int h);
+
+void set_val(img_t *img, int val, int x, int y);
+
+int get_val(img_t *img, int x, int y);
+void free_img(img_t *img);
+
+img_t *ld_img_img(const char *name);
+void mk_img_img(img_t *img, const char *name);
+inline int wrap(register int x, register int side);
+void set_stack_size(int mb);
+void cp_img(img_t **dest, img_t *src);
